@@ -9,19 +9,18 @@ class BackupHandler:
         """
         try:
             # database related environment variables
-            self.DATABASE_NAME = os.environ.get('DATABASE_NAME') # only nessecery for single db backup.
-            self.DATABASE_USER = os.environ['DATABASE_USER']
-            self.DATABASE_PASSWORD = os.environ['DATABASE_PASSWORD']
-            self.DATABASE_PORT = os.environ['DATABASE_PORT']
-            self.DATABASE_HOST = os.environ['DATABASE_HOST']
+            self.__DATABASE_NAME = os.environ.get('DATABASE_NAME') # only nessecery for single db backup.
+            self.__DATABASE_USER = os.environ['DATABASE_USER']
+            self.__DATABASE_PASSWORD = os.environ['DATABASE_PASSWORD']
+            self.__DATABASE_PORT = os.environ['DATABASE_PORT']
+            self.__DATABASE_HOST = os.environ['DATABASE_HOST']
 
             # set PGPASSWORD environment variable to prevent repeating password as an input in terminal for pg_dumpall
-            os.environ['PGPASSWORD'] = self.DATABASE_PASSWORD
+            os.environ['PGPASSWORD'] = self.__DATABASE_PASSWORD
 
         except Exception as none_error:
             print(f'can not continue the process due to : {none_error}')
             exit(0)
-
 
 
     def backup_single_db(self):
@@ -31,7 +30,7 @@ class BackupHandler:
         try:
             backup_process = subprocess.Popen(
                 ['pg_dump',
-                 f'--dbname=postgresql://{self.DATABASE_USER}:{self.DATABASE_PASSWORD}@{self.DATABASE_HOST}:{self.DATABASE_PORT}/{self.DATABASE_NAME}',
+                 f'--dbname=postgresql://{self.__DATABASE_USER}:{self.__DATABASE_PASSWORD}@{self.__DATABASE_HOST}:{self.__DATABASE_PORT}/{self.__DATABASE_NAME}',
                  '-f', '.TempBackupFiles/temp_backup.sql'],
                 stdout=subprocess.PIPE
             )
@@ -43,8 +42,6 @@ class BackupHandler:
                 print(f'command failed. return code : {backup_process.returncode}')
                 exit(1)
 
-            return result
-
         except Exception as error:
             print(f'process failed due to : {error}')
             os.remove('.TempBackupFiles/temp_backup.sql')
@@ -53,8 +50,12 @@ class BackupHandler:
         except KeyboardInterrupt as intrupt:
             os.remove('.TempBackupFiles/temp_backup.sql')
             raise intrupt
-    
 
+        else:
+            # set file names & path as environment variable
+            os.environ['UPLOADING_FILE_PATH'] = '.TempBackupFiles/temp_backup.sql'
+            return result
+    
 
     def backup_all(self):
         """
@@ -63,7 +64,7 @@ class BackupHandler:
         try:
             backup_process = subprocess.Popen(
                 ['pg_dumpall',
-                 f'--dbname=postgresql://{self.DATABASE_USER}:{self.DATABASE_PASSWORD}@{self.DATABASE_HOST}:{self.DATABASE_PORT}',
+                 f'--dbname=postgresql://{self.__DATABASE_USER}:{self.__DATABASE_PASSWORD}@{self.__DATABASE_HOST}:{self.__DATABASE_PORT}',
                  '-f', '.TempBackupFiles/temp_backup_all.sql'],
                 stdout=subprocess.PIPE
             )
@@ -75,8 +76,6 @@ class BackupHandler:
                 print(f'command failed. return code : {backup_process.returncode}')
                 exit(1)
 
-            return result
-
         except Exception as error:
             print(f'process failed due to : {error}')
             os.remove('.TempBackupFiles/temp_backup_all.sql')
@@ -85,12 +84,8 @@ class BackupHandler:
         except KeyboardInterrupt as intrupt:
             os.remove('.TempBackupFiles/temp_backup_all.sql')
             raise intrupt
-    
 
-
-if __name__ == '__main__':
-    # <temporary> tests
-    handler = BackupHandler()
-    
-    handler.backup_all()
-    handler.backup_single_db()
+        else:
+            # set file names & path as environment variable
+            os.environ['UPLOADING_FILE_PATH'] = '.TempBackupFiles/temp_backup_all.sql'
+            return result
