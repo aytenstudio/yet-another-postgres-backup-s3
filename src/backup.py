@@ -20,7 +20,7 @@ class BackupHandler:
             os.environ['PGPASSWORD'] = self.__DATABASE_PASSWORD
 
         except Exception as none_error:
-            print(f'can not continue the process due to : {none_error}')
+            print(f'can not continue the process due to : {none_error} is None')
             exit(0)
 
 
@@ -55,6 +55,7 @@ class BackupHandler:
         else:
             # set file names & path as environment variable
             os.environ['UPLOADING_FILE_PATH'] = f'{self.__TEMP_DIR_STORE_FILES}/temp_backup.dump'
+            print('backup process successfully done.')
             return result
     
 
@@ -89,4 +90,5 @@ class BackupHandler:
         else:
             # set file names & path as environment variable
             os.environ['UPLOADING_FILE_PATH'] = f'{self.__TEMP_DIR_STORE_FILES}/temp_backup_all.dump'
+            print('backup process successfully done.')
             return result

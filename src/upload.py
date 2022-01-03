@@ -29,7 +29,7 @@ class UploadHandler:
                                 config=Config(signature_version=self.__SIGNATURE_VERSION))
 
         except Exception as error:
-            print(f'can not continue the process due to : {error}')
+            print(f'can not continue the process due to : {error} is None')
             exit(0)
 
 
@@ -39,16 +39,18 @@ class UploadHandler:
         """
         try:
             bucket = self.s3_resource_client.Bucket(self.__DESTINATION_BUCKET_NAME)
-            all_objects = [obj for obj in bucket.objects.all()]
 
-            print(all_objects)
+            # reverse sorting objects by their last_modified date so the last object in the list is the oldest one.
+            all_objects = [obj for obj in sorted(bucket.objects.all(), key=lambda obj: obj.last_modified, reverse=True)]
+
             # if number of objects in the bucket reached to the maximum number of objects, delete the oldest objects.
-            if len(all_objects) == self.__MAX_NUMBER_BACKUPS:
-                all_objects[0].delete()
+            while len(all_objects) >= self.__MAX_NUMBER_BACKUPS:
+                all_objects.pop().delete()
 
-            print(all_objects)
+            # objects are saved with their uploading utc date time. 
+            result = bucket.upload_file(self.__UPLOADING_FILE_PATH, f'{datetime.utcnow()}.dump')
 
-            result = bucket.upload_file(self.__UPLOADING_FILE_PATH, f'{datetime.now()}.dump')
+            print(f'current objects in the bucket : {[obj.key for obj in bucket.objects.all()]}')
 
                 
 
