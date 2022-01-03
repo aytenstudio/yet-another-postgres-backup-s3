@@ -19,6 +19,7 @@ class UploadHandler:
             self.__UPLOADING_FILE_PATH = os.environ['UPLOADING_FILE_PATH']
             self.__DESTINATION_BUCKET_NAME = os.environ['DESTINATION_BUCKET_NAME']
             self.__SIGNATURE_VERSION = os.environ['SIGNATURE_VERSION']
+            self.__MAX_NUMBER_BACKUPS = int(os.environ['MAX_NUMBER_BACKUPS'])
 
             # set resource client
             self.s3_resource_client = boto3.resource('s3',
@@ -37,8 +38,19 @@ class UploadHandler:
             upload files to destination bucket.
         """
         try:
-            result = self.s3_resource_client.Bucket(self.__DESTINATION_BUCKET_NAME)\
-                .upload_file(self.__UPLOADING_FILE_PATH, f'{datetime.now()}.sql')
+            bucket = self.s3_resource_client.Bucket(self.__DESTINATION_BUCKET_NAME)
+            all_objects = [obj for obj in bucket.objects.all()]
+
+            print(all_objects)
+            # if number of objects in the bucket reached to the maximum number of objects, delete the oldest objects.
+            if len(all_objects) == self.__MAX_NUMBER_BACKUPS:
+                all_objects[0].delete()
+
+            print(all_objects)
+
+            result = bucket.upload_file(self.__UPLOADING_FILE_PATH, f'{datetime.now()}.dump')
+
+                
 
         except Exception as error:
             print(f'can not continue the process due to : {error}')
