@@ -1,4 +1,4 @@
-# base image (host os) -> python3.11
+# base image (host os) -> python3.8.10
 FROM python:3.8.10
 
 # environment variables [required]
